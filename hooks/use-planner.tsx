@@ -1,21 +1,23 @@
-// hooks/use-planner.tsx (Updated Scaffold)
+// hooks/use-planner.tsx (Final Scaffold Update)
 import * as React from 'react';
 
-// 1. Minimal scaffold for a Context Provider
+// PlannerProvider and other boilerplate components remain the same
 const PlannerProvider = ({ children }: { children: React.ReactNode }) => {
-  // In a real app, this would set up global state (useState, useReducer, etc.)
   return <>{children}</>;
 };
 PlannerProvider.displayName = "PlannerProvider";
 
 
-// 2. Minimal scaffold for the custom Hook
-// This function is what the consuming components (planner-layout, etc.) are looking for.
+// 2. Updated scaffold for the custom Hook
 const usePlanner = () => {
-  // This will return an empty object, which satisfies the requirement that it's a function that returns an object.
-  return {}; 
+  // ADD THE MINIMAL NECESSARY PROPERTIES HERE
+  return {
+    // The component is reading 'weeks' from the hook, so we must provide it.
+    weeks: [], 
+    // Add any other properties the consuming components might be reading (e.g., a function or a number)
+  }; 
 };
 
 
-// Export both the Provider (used in planner-app.tsx) and the Hook (used everywhere else)
+// Export both the Provider and the Hook
 export { PlannerProvider, usePlanner };
