@@ -1,60 +1,29 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, createContext, useContext } from "react" // <-- IMPORT CONTEXT
 import type { PlannerState, Week, DayEntry } from "@/types/planner"
 import { loadState, saveState, clearState } from "@/lib/storage"
 import { addDays, startOfWeek } from "date-fns"
 
+// ... (Rest of your existing code remains here: DEFAULT_WEEKS_COUNT and generateInitialState)
 const DEFAULT_WEEKS_COUNT = 12
+// ... (Your generateInitialState function)
 
-const generateInitialState = (): PlannerState => {
-  const today = new Date()
-  const start = startOfWeek(today, { weekStartsOn: 1 }) // Monday start
-  const weeks: Week[] = []
+// --- Define the Context Interface ---
+// The return type of usePlanner() becomes the Context Value
+type PlannerContextType = ReturnType<typeof usePlanner> | undefined
 
-  for (let i = 0; i < DEFAULT_WEEKS_COUNT; i++) {
-    const weekStart = addDays(start, i * 7)
-    const days: DayEntry[] = []
-    for (let j = 0; j < 7; j++) {
-      const date = addDays(weekStart, j)
-      days.push({
-        id: `w${i}-d${j}`,
-        date: date.toISOString(),
-        training: [
-          { id: "ex1", name: "Squat", sets: 4, reps: 8 },
-          { id: "ex2", name: "Bench Press", sets: 4, reps: 8 },
-          { id: "ex3", name: "Deadlift", sets: 3, reps: 5 },
-          { id: "ex4", name: "Overhead Press", sets: 3, reps: 8 },
-          { id: "ex5", name: "Pull Ups", sets: 3, reps: 10 },
-          { id: "ex6", name: "Dips", sets: 3, reps: 10 },
-        ],
-        habits: {
-          sleep: false,
-          nutrition: false,
-          hydration: false,
-          mobility: false,
-        },
-      })
-    }
-    weeks.push({
-      id: `week-${i}`,
-      startDate: weekStart.toISOString(),
-      days,
-    })
-  }
+// --- Define the Context ---
+const PlannerContext = createContext<PlannerContextType>(undefined)
 
-  return {
-    programName: "Return to Form",
-    weeks,
-    coreMetrics: { heightCm: null, weightKg: null, bodyfat: null },
-    lastSavedAt: new Date().toISOString(),
-  }
-}
-
-export const usePlanner = () => {
+// --- 1. Export the usePlanner Hook ---
+export const usePlanner = () => { // <--- usePlanner is exported
   const [state, setState] = useState<PlannerState | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // ... (Your existing useEffect, updateMetric, updateDay, etc. logic)
+
+  // useEffect for loading/initial state
   useEffect(() => {
     const loaded = loadState()
     if (loaded) {
@@ -65,12 +34,14 @@ export const usePlanner = () => {
     setIsLoading(false)
   }, [])
 
+  // useEffect for saving state
   useEffect(() => {
     if (state && !isLoading) {
       saveState(state)
     }
   }, [state, isLoading])
 
+  // updateMetric logic
   const updateMetric = useCallback((key: keyof NonNullable<PlannerState["coreMetrics"]>, value: number) => {
     setState((prev) => {
       if (!prev) return null
@@ -80,7 +51,8 @@ export const usePlanner = () => {
       }
     })
   }, [])
-
+  
+  // updateDay logic
   const updateDay = useCallback((weekIndex: number, dayIndex: number, updates: Partial<DayEntry>) => {
     setState((prev) => {
       if (!prev) return null
@@ -92,6 +64,7 @@ export const usePlanner = () => {
     })
   }, [])
 
+  // updateExercise logic
   const updateExercise = useCallback(
     (weekIndex: number, dayIndex: number, exerciseIndex: number, field: string, value: any) => {
       setState((prev) => {
@@ -111,6 +84,7 @@ export const usePlanner = () => {
     [],
   )
 
+  // resetPlanner logic
   const resetPlanner = useCallback(() => {
     if (confirm("Are you sure you want to reset all data?")) {
       clearState()
@@ -118,12 +92,42 @@ export const usePlanner = () => {
     }
   }, [])
 
+  // Return object for the Hook
   return {
     state,
     isLoading,
+    weeks: state?.weeks || [], // <-- IMPORTANT: Provide the 'weeks' property
     updateMetric,
     updateDay,
     updateExercise,
     resetPlanner,
   }
+}
+
+
+// --- 2. Export the PlannerProvider Component ---
+export const PlannerProvider = ({ children }: { children: React.ReactNode }) => { // <--- PlannerProvider is exported
+  const planner = usePlanner()
+  
+  // Since the prerendering fails on null/undefined state, we must wait for it to load.
+  if (planner.isLoading || !planner.state) { 
+    return null; // Or a simple Loading... component if you have one
+  }
+
+  // Provide the state via Context
+  return (
+    <PlannerContext.Provider value={planner}>
+      {children}
+    </PlannerContext.Provider>
+  )
+}
+
+// --- 3. Export a simpler usePlanner Hook (Best Practice) ---
+// This ensures that all consuming components get the value from the Context.
+export const usePlannerContext = () => {
+  const context = useContext(PlannerContext)
+  if (context === undefined) {
+    throw new Error("usePlannerContext must be used within a PlannerProvider")
+  }
+  return context
 }
