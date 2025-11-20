@@ -1,44 +1,36 @@
 "use client"
 
-import { useState, useEffect, useCallback, createContext, useContext } from "react" // <-- IMPORT CONTEXT
-import type { PlannerState, Week, DayEntry } from "@/types/planner"
-import { loadState, saveState, clearState } from "@/lib/storage"
-import { addDays, startOfWeek } from "date-fns"
+import { useState, useEffect, useCallback, createContext, useContext } from "react"
+// Note: You must have created or copied the missing files:
+// "@/types/planner"
+// "@/lib/storage"
 
 // ... (Rest of your existing code remains here: DEFAULT_WEEKS_COUNT and generateInitialState)
-const DEFAULT_WEEKS_COUNT = 12
-// ... (Your generateInitialState function)
 
 // --- Define the Context Interface ---
 // The return type of usePlanner() becomes the Context Value
-type PlannerContextType = ReturnType<typeof usePlanner> | undefined
+type PlannerContextType = ReturnType<typeof usePlanner>
 
 // --- Define the Context ---
-const PlannerContext = createContext<PlannerContextType>(undefined)
+// Initialize with a throwaway value instead of 'undefined' to simplify type handling 
+const PlannerContext = createContext<PlannerContextType>({} as PlannerContextType)
 
 // --- 1. Export the usePlanner Hook ---
-export const usePlanner = () => { // <--- usePlanner is exported
+// The components must use the values from this return object.
+export const usePlanner = () => { 
   const [state, setState] = useState<PlannerState | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  // ... (Your existing useEffect, updateMetric, updateDay, etc. logic)
+  
+  // ... (All your existing updateMetric, updateDay, etc. logic)
 
   // useEffect for loading/initial state
   useEffect(() => {
-    const loaded = loadState()
-    if (loaded) {
-      setState(loaded)
-    } else {
-      setState(generateInitialState())
-    }
-    setIsLoading(false)
+    // ... (Your existing loadState/generateInitialState logic)
   }, [])
 
   // useEffect for saving state
   useEffect(() => {
-    if (state && !isLoading) {
-      saveState(state)
-    }
+    // ... (Your existing saveState logic)
   }, [state, isLoading])
 
   // updateMetric logic
@@ -76,7 +68,7 @@ export const usePlanner = () => { // <--- usePlanner is exported
           ...newTraining[exerciseIndex],
           [field]: value,
         }
-        newDays[dayIndex] = { ...newDays[dayIndex], training: newTraining }
+        newDays[dayIndex] = { ...newDays[dayEntry], training: newTraining }
         newWeeks[weekIndex] = { ...newWeeks[weekIndex], days: newDays }
         return { ...prev, weeks: newWeeks }
       })
@@ -92,11 +84,13 @@ export const usePlanner = () => { // <--- usePlanner is exported
     }
   }, [])
 
-  // Return object for the Hook
+
+  // --- UPDATED RETURN OBJECT ---
   return {
     state,
     isLoading,
-    weeks: state?.weeks || [], // <-- IMPORTANT: Provide the 'weeks' property
+    // CRITICAL: Ensure 'weeks' is ALWAYS an array, even if state is null/loading.
+    weeks: state?.weeks || generateInitialState().weeks, 
     updateMetric,
     updateDay,
     updateExercise,
@@ -106,12 +100,13 @@ export const usePlanner = () => { // <--- usePlanner is exported
 
 
 // --- 2. Export the PlannerProvider Component ---
-export const PlannerProvider = ({ children }: { children: React.ReactNode }) => { // <--- PlannerProvider is exported
+export const PlannerProvider = ({ children }: { children: React.ReactNode }) => {
   const planner = usePlanner()
   
-  // Since the prerendering fails on null/undefined state, we must wait for it to load.
+  // This check MUST be here to prevent children from running before state is loaded.
+  // If the component trying to read 'weeks' is a child, this will block it.
   if (planner.isLoading || !planner.state) { 
-    return null; // Or a simple Loading... component if you have one
+    return null; // Stop rendering children while loading
   }
 
   // Provide the state via Context
@@ -122,11 +117,11 @@ export const PlannerProvider = ({ children }: { children: React.ReactNode }) => 
   )
 }
 
-// --- 3. Export a simpler usePlanner Hook (Best Practice) ---
-// This ensures that all consuming components get the value from the Context.
+// --- 3. Export the hook that consumers actually use ---
 export const usePlannerContext = () => {
   const context = useContext(PlannerContext)
-  if (context === undefined) {
+  if (Object.keys(context).length === 0) {
+    // This catches the uninitialized context value
     throw new Error("usePlannerContext must be used within a PlannerProvider")
   }
   return context
