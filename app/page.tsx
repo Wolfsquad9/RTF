@@ -1,16 +1,15 @@
-"use client"
+// app/page.tsx (Final Update)
+"use client" // KEEP THIS AS WE ARE IMPORTING A CLIENT COMPONENT
+
 import React from "react"
 import "./planner.css"
-import { PlannerApp } from "@/components/planner/planner-app"
-import { PlannerProvider } from "@/hooks/use-planner" // <-- 1. IMPORT THE PROVIDER
+import { PlannerWrapper } from "@/components/PlannerWrapper" // <-- NEW IMPORT
 
 export default function Page() {
   return (
     <main className="min-h-screen bg-black text-white">
-      {/* 2. WRAP THE COMPONENT THAT NEEDS THE CONTEXT */}
-      <PlannerProvider>
-        <PlannerApp />
-      </PlannerProvider>
+      {/* USE THE WRAPPER COMPONENT HERE */}
+      <PlannerWrapper />
     </main>
   )
 }
