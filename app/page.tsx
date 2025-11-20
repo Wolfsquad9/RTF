@@ -1,4 +1,4 @@
-use client
+"use client"
 import React from "react"
 import "./planner.css"
 import { PlannerApp } from "@/components/planner/planner-app"
