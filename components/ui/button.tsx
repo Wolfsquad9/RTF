@@ -1,0 +1,21 @@
+import * as React from "react"
+
+export type ButtonProps = React.ComponentPropsWithoutRef<"button">
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <button
+        className={className}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </button>
+    )
+  }
+)
+
+Button.displayName = "Button"
+
+export { Button }
