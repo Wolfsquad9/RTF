@@ -1,21 +1,37 @@
+// components/ui/card.tsx (Updated Scaffold)
 import * as React from "react"
 
-// Define the component's props, extending standard HTML div element props
 export type CardProps = React.ComponentPropsWithoutRef<"div">
 
-// Use forwardRef to allow the component to receive a ref
+// Card Component (Root)
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, ...props }, ref) => (
-    // The div component will receive any custom classNames and other standard props
-    <div
-      ref={ref}
-      className={className} // Tailwind classes can be passed via className
-      {...props}
-    />
+    <div ref={ref} className={className} {...props} />
   )
 )
-
-// Set a display name for easier debugging
 Card.displayName = "Card"
 
-export { Card }
+// New Scaffolds for Sub-Components
+const CardHeader = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={className} {...props} />
+  )
+)
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<HTMLHeadingElement, React.ComponentPropsWithoutRef<"h3">>(
+  ({ className, ...props }, ref) => (
+    <h3 ref={ref} className={className} {...props} />
+  )
+)
+CardTitle.displayName = "CardTitle"
+
+const CardContent = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={className} {...props} />
+  )
+)
+CardContent.displayName = "CardContent"
+
+// Export all components needed by the consuming files
+export { Card, CardHeader, CardTitle, CardContent }
