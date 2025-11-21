@@ -125,6 +125,7 @@ export const DailyLog = memo(function DailyLog({
                     checked={checked}
                     onCheckedChange={(c) => {
                       const newHabits = { ...day.habits, [key]: !!c }
+                      className="border-zinc-700 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"  // Already good
                       onUpdateDay(weekIndex, dayIndex, { habits: newHabits })
                     }}
                   />
