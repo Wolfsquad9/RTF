@@ -124,3 +124,18 @@
     @apply bg-background text-foreground;
   }
 }
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-[var(--primary-bg)] text-[var(--text-primary)];
+  }
+}
+
+/* Ensure planner vars cascade */
+:root {
+  --primary-bg: #0a0a0a !important;
+  --text-primary: #e0e0e0 !important;
+  /* ... rest from planner.css */
+}
