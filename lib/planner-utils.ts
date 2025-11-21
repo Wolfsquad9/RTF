@@ -3,7 +3,7 @@ import { addDays, startOfWeek } from "date-fns"
 
 export const generateInitialState = (): PlannerState => {
   const weeks: Week[] = []
-  const startDate = startOfWeek(new Date(), { weekStartsOn: 1 }) // Start on Monday
+  const startDate = startOfWeek(new Date(), { weekStartsOn: 1 })
 
   for (let w = 0; w < 12; w++) {
     const weekStart = addDays(startDate, w * 7)
@@ -36,7 +36,9 @@ export const generateInitialState = (): PlannerState => {
 
     weeks.push({
       id: `week-${w + 1}`,
+      number: w + 1, // FIXED: Added week number
       startDate: weekStart.toISOString(),
+      objective: "", // FIXED: Added objective
       days,
     })
   }
