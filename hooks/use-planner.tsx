@@ -1,4 +1,3 @@
-// hooks/use-planner.tsx
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
@@ -31,7 +30,9 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const loaded = loadState()
-      if (loaded) setState(loaded)
+      if (loaded) {
+        setState(loaded)
+      }
     } catch (e) {
       console.error("Failed to load planner state:", e)
     } finally {
@@ -39,7 +40,6 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // debounce-like: we save but avoid saving while loading initial
   useEffect(() => {
     if (!isLoading) {
       try {
@@ -51,42 +51,61 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
   }, [state, isLoading])
 
   const updateMetric: UpdateMetricFn = useCallback((key, value) => {
-    setState(prev => ({ ...prev, coreMetrics: { ...(prev.coreMetrics || {}), [key]: value } }))
+    setState(prev => ({
+      ...prev,
+      coreMetrics: { ...(prev.coreMetrics || {}), [key]: value },
+      lastSavedAt: new Date().toISOString()
+    }))
   }, [])
 
   const updateDay: UpdateDayFn = useCallback((weekIndex, dayIndex, updates) => {
     setState(prev => {
-      const next = { ...prev }
-      if (!next.weeks?.[weekIndex]) return prev
-      const weeks = next.weeks.slice()
-      const days = weeks[weekIndex].days.slice()
+      const weeks = [...prev.weeks]
+      const week = { ...weeks[weekIndex] }
+      const days = [...week.days]
       days[dayIndex] = { ...days[dayIndex], ...updates }
-      weeks[weekIndex] = { ...weeks[weekIndex], days }
-      return { ...next, weeks }
+      week.days = days
+      weeks[weekIndex] = week
+      
+      return {
+        ...prev,
+        weeks,
+        lastSavedAt: new Date().toISOString()
+      }
     })
   }, [])
 
   const updateExercise: UpdateExerciseFn = useCallback((weekIndex, dayIndex, exerciseIndex, field, value) => {
     setState(prev => {
-      const next = { ...prev }
-      if (!next.weeks?.[weekIndex]) return prev
-      const weeks = next.weeks.slice()
-      const days = weeks[weekIndex].days.slice()
-      const training = (days[dayIndex].training || []).slice()
+      const weeks = [...prev.weeks]
+      const week = { ...weeks[weekIndex] }
+      const days = [...week.days]
+      const day = { ...days[dayIndex] }
+      const training = [...(day.training || [])]
       training[exerciseIndex] = { ...training[exerciseIndex], [field]: value }
-      days[dayIndex] = { ...days[dayIndex], training }
-      weeks[weekIndex] = { ...weeks[weekIndex], days }
-      return { ...next, weeks }
+      day.training = training
+      days[dayIndex] = day
+      week.days = days
+      weeks[weekIndex] = week
+      
+      return {
+        ...prev,
+        weeks,
+        lastSavedAt: new Date().toISOString()
+      }
     })
   }, [])
 
   const updateWeek: UpdateWeekFn = useCallback((weekIndex, patch) => {
     setState(prev => {
-      const next = { ...prev }
-      if (!next.weeks?.[weekIndex]) return prev
-      const weeks = next.weeks.slice()
+      const weeks = [...prev.weeks]
       weeks[weekIndex] = { ...weeks[weekIndex], ...patch }
-      return { ...next, weeks }
+      
+      return {
+        ...prev,
+        weeks,
+        lastSavedAt: new Date().toISOString()
+      }
     })
   }, [])
 
