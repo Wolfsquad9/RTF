@@ -123,3 +123,32 @@
     @apply bg-background text-foreground;
   }
 }
+/* ===== FORCE DARK MODE + REAL GOLD (v0 look restored) ===== */
+html.dark {
+  color-scheme: dark;
+}
+
+.dark {
+  --background: oklch(0.11 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.95 0 0);
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.18 0 0);
+  --ring: oklch(0.4 0 0);
+
+  /* REAL GOLD instead of white primary */
+  --primary: 45 100% 60%;           /* oklch version of #d4af37 */
+  --primary-foreground: 0 0% 0%;    /* black text on gold */
+  --accent: 45 100% 60%;
+  --accent-foreground: 0 0% 0%;
+}
+
+/* Ensure your planner.css gold wins everywhere */
+.dark .text-amber-500,
+.dark [class*="accent"],
+.dark h1, .dark h2, .dark h3,
+.dark .week-label,
+.dark .control-btn {
+  color: #d4af37 !important;
+}
