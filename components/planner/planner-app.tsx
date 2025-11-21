@@ -3,8 +3,10 @@
 
 import React from "react"
 import { PlannerProvider } from "@/hooks/use-planner"
-import PlannerLayout from "./planner-layout"
-import PlannerList from "./planner-list"
+
+// FIXED IMPORTS: use named imports
+import { PlannerLayout } from "./planner-layout"
+import { PlannerList } from "./planner-list"
 
 export function PlannerApp() {
   return (
