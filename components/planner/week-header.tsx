@@ -2,87 +2,50 @@
 
 import React, { useCallback } from "react"
 import { usePlanner } from "@/hooks/use-planner"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface WeekHeaderProps {
   weekId: string
 }
 
 export function WeekHeader({ weekId }: WeekHeaderProps) {
-  const { state, dispatch } = usePlanner()
-
-  if (!state) return null
+  const { state, updateWeek } = usePlanner()
 
   const weekIndex = state.weeks.findIndex((w) => w.id === weekId)
   if (weekIndex === -1) return null
 
   const week = state.weeks[weekIndex]
 
-  // Clean controlled update of the weekly objective
-  const updateObjective = useCallback(
-    (value: string) => {
-      const updatedWeeks = [...state.weeks]
-      updatedWeeks[weekIndex] = {
-        ...updatedWeeks[weekIndex],
-        objective: value
-      }
-
-      dispatch({
-        type: "DIRECT_STATE_UPDATE",
-        payload: { weeks: updatedWeeks }
-      })
+  const handleObjectiveChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      updateWeek(weekIndex, { objective: e.target.value })
     },
-    [state, weekIndex, dispatch]
+    [weekIndex, updateWeek]
   )
 
   return (
-    <div className="week-header">
-      <div className="week-header-top">
-        <h2 className="week-title">Week {week.number}</h2>
-      </div>
-
-      <div className="week-objective">
-        <label className="label">Weekly Objective</label>
-        <input
-          type="text"
-          className="week-input"
-          value={week.objective || ""}
-          onChange={(e) => updateObjective(e.target.value)}
-          placeholder="Enter your focus for this week"
-        />
-      </div>
-
-      <style jsx>{`
-        .week-header {
-          padding: 16px;
-          border-bottom: 1px solid var(--border-color);
-          background: var(--background-secondary);
-        }
-
-        .week-title {
-          margin: 0;
-          font-size: 1.4rem;
-          font-weight: 600;
-        }
-
-        .week-objective {
-          margin-top: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .label {
-          font-size: 0.85rem;
-          opacity: 0.8;
-        }
-
-        .week-input {
-          padding: 8px 12px;
-          border-radius: 6px;
-          border: 1px solid var(--border-color);
-          background: var(--background);
-        }
-      `}</style>
-    </div>
+    <Card className="border-zinc-800 bg-zinc-950/50 mb-6">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-2xl font-bold text-amber-500 uppercase tracking-wider">
+          Week {week.number}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          <Label htmlFor={`week-${week.id}-objective`} className="text-sm text-zinc-400">
+            Weekly Objective
+          </Label>
+          <Input
+            id={`week-${week.id}-objective`}
+            value={week.objective || ""}
+            onChange={handleObjectiveChange}
+            className="bg-zinc-900 border-zinc-800 text-base"
+            placeholder="What's your focus this week?"
+          />
+        </div>
+      </CardContent>
+    </Card>
   )
 }
