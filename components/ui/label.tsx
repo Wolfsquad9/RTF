@@ -1,14 +1,16 @@
+// ============================================
+// components/ui/label.tsx
+// ============================================
 import * as React from "react"
+import { cn } from "@/lib/utils"
 
-// Define the component's props, extending standard HTML label element props
 export type LabelProps = React.ComponentPropsWithoutRef<"label">
 
-// Use forwardRef for consistency, though often less critical for a label
 const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
   ({ className, ...props }, ref) => (
     <label
       ref={ref}
-      className={className} // Tailwind classes can be passed via className
+      className={cn("text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70", className)}
       {...props}
     />
   )
@@ -17,3 +19,4 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
 Label.displayName = "Label"
 
 export { Label }
+
