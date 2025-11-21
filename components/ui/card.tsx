@@ -1,37 +1,38 @@
-// components/ui/card.tsx (Updated Scaffold)
+// ============================================
+// components/ui/card.tsx
+// ============================================
 import * as React from "react"
+import { cn } from "@/lib/utils"
 
 export type CardProps = React.ComponentPropsWithoutRef<"div">
 
-// Card Component (Root)
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={className} {...props} />
+    <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
   )
 )
 Card.displayName = "Card"
 
-// New Scaffolds for Sub-Components
 const CardHeader = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={className} {...props} />
+    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
   )
 )
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<HTMLHeadingElement, React.ComponentPropsWithoutRef<"h3">>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={className} {...props} />
+    <h3 ref={ref} className={cn("text-2xl font-semibold leading-none tracking-tight", className)} {...props} />
   )
 )
 CardTitle.displayName = "CardTitle"
 
 const CardContent = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={className} {...props} />
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
   )
 )
 CardContent.displayName = "CardContent"
 
-// Export all components needed by the consuming files
 export { Card, CardHeader, CardTitle, CardContent }
+
