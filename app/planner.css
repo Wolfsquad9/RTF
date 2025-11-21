@@ -1,3 +1,6 @@
+html.dark body {
+  background: #0a0a0a !important;
+}
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Bebas+Neue&display=swap");
 
 * {
