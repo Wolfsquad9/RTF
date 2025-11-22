@@ -8,10 +8,10 @@ import { WeekHeader } from "./week-header"
 import { CoreMetrics } from "./core-metrics"
 
 type ListItem =
-  // 💡 CORRECTED: IDs must be string, matching lib/planner-utils.ts
+  // 💡 CORRECTED: Use Index-based items to match child components (WeekHeader, DailyLog)
   | { type: "metrics" }
-  | { type: "week-header"; weekId: string }
-  | { type: "day"; dayId: string; weekId: string }
+  | { type: "week-header"; weekIndex: number }
+  | { type: "day"; weekIndex: number; dayIndex: number }
 
 export function PlannerList() {
   const { state } = usePlanner()
@@ -21,17 +21,17 @@ export function PlannerList() {
   const items = useMemo(() => {
     const list: ListItem[] = [{ type: "metrics" }]
 
-    state.weeks.forEach((week) => {
-      // NOTE: week.id is a string (e.g., "week-1")
-      list.push({ type: "week-header", weekId: week.id }) 
-      week.days.forEach((day) => {
-        // NOTE: day.id is a string (e.g., "w1-d1")
-        list.push({ type: "day", dayId: day.id, weekId: week.id }) 
+    // Use indices for component lookup (matches WeekHeaderProps and DailyLogProps)
+    state.weeks.forEach((week, weekIndex) => { 
+      list.push({ type: "week-header", weekIndex }) 
+      week.days.forEach((day, dayIndex) => {
+        list.push({ type: "day", weekIndex, dayIndex })
       })
     })
 
     return list
   }, [state.weeks])
+  // ... (rest of the code is identical)
 
   const virtualizer = useWindowVirtualizer({
     count: items.length,
@@ -71,9 +71,9 @@ export function PlannerList() {
             >
               <div className="pb-8">
                 {item.type === "metrics" && <CoreMetrics />}
-                {/* Rendering components now receive string IDs */}
-                {item.type === "week-header" && <WeekHeader weekId={item.weekId} />}
-                {item.type === "day" && <DailyLog dayId={item.dayId} weekId={item.weekId} />}
+                {/* 💡 Rendering components now receive index props (matches FIX 5 and FIX 6) */}
+                {item.type === "week-header" && <WeekHeader weekIndex={item.weekIndex} />}
+                {item.type === "day" && <DailyLog weekIndex={item.weekIndex} dayIndex={item.dayIndex} />}
               </div>
             </div>
           )
