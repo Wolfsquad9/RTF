@@ -3,14 +3,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type { PlannerState } from "@/types/planner"
+import { usePlanner } from "@/hooks/use-planner"
 
-interface CoreMetricsProps {
-  metrics: NonNullable<PlannerState["coreMetrics"]>
-  onUpdate: (key: keyof NonNullable<PlannerState["coreMetrics"]>, value: number) => void
-}
+export function CoreMetrics() {
+  const { state, updateMetric } = usePlanner()
+  const metrics = state.coreMetrics || {}
 
-export function CoreMetrics({ metrics, onUpdate }: CoreMetricsProps) {
   return (
     <Card className="border-zinc-800 bg-zinc-950/50">
       <CardHeader className="pb-3">
@@ -25,7 +23,7 @@ export function CoreMetrics({ metrics, onUpdate }: CoreMetricsProps) {
             id="height"
             type="number"
             value={metrics.heightCm || ""}
-            onChange={(e) => onUpdate("heightCm", Number(e.target.value))}
+            onChange={(e) => updateMetric("heightCm", Number(e.target.value))}
             className="bg-zinc-900 border-zinc-800 h-8 text-sm"
             placeholder="0"
           />
@@ -38,7 +36,7 @@ export function CoreMetrics({ metrics, onUpdate }: CoreMetricsProps) {
             id="weight"
             type="number"
             value={metrics.weightKg || ""}
-            onChange={(e) => onUpdate("weightKg", Number(e.target.value))}
+            onChange={(e) => updateMetric("weightKg", Number(e.target.value))}
             className="bg-zinc-900 border-zinc-800 h-8 text-sm"
             placeholder="0.0"
           />
@@ -51,7 +49,7 @@ export function CoreMetrics({ metrics, onUpdate }: CoreMetricsProps) {
             id="bodyfat"
             type="number"
             value={metrics.bodyfat || ""}
-            onChange={(e) => onUpdate("bodyfat", Number(e.target.value))}
+            onChange={(e) => updateMetric("bodyfat", Number(e.target.value))}
             className="bg-zinc-900 border-zinc-800 h-8 text-sm"
             placeholder="0.0"
           />
