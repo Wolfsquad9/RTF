@@ -1,29 +1,20 @@
+// lib/storage.ts
+
 import type { PlannerState } from "@/types/planner"
 
-const STORAGE_KEY = "rtf_planner_state_v1"
+const STORAGE_KEY = "plannerState" // For reference, but not used
 
-export const loadState = (): PlannerState | null => {
-  if (typeof window === "undefined") return null
-  try {
-    const serialized = localStorage.getItem(STORAGE_KEY)
-    if (!serialized) return null
-    return JSON.parse(serialized)
-  } catch (e) {
-    console.error("Failed to load state", e)
-    return null
-  }
+// Dummy functions that do nothing, guaranteeing no interference with localStorage
+
+export function loadState(): PlannerState | undefined {
+  console.warn("Storage is currently disabled to force a clean state.")
+  return undefined // Always return undefined to force initial state generation
 }
 
-export const saveState = (state: PlannerState) => {
-  if (typeof window === "undefined") return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch (e) {
-    console.error("Failed to save state", e)
-  }
+export function saveState(state: PlannerState) {
+  // Do nothing
 }
 
-export const clearState = () => {
-  if (typeof window === "undefined") return
-  localStorage.removeItem(STORAGE_KEY)
+export function clearState() {
+  // Do nothing
 }
