@@ -9,20 +9,22 @@ import { CoreMetrics } from "./core-metrics"
 
 type ListItem =
   | { type: "metrics" }
-  | { type: "week-header"; weekIndex: number }
-  | { type: "day"; weekIndex: number; dayIndex: number }
+  | { type: "week-header"; weekId: number }
+  | { type: "day"; dayId: number; weekId: number }
 
 export function PlannerList() {
   const { state } = usePlanner()
   const listRef = useRef<HTMLDivElement>(null)
 
+  // Flatten the structure for virtualization
   const items = useMemo(() => {
     const list: ListItem[] = [{ type: "metrics" }]
 
-    state.weeks.forEach((week, weekIndex) => {
-      list.push({ type: "week-header", weekIndex })
-      week.days.forEach((day, dayIndex) => {
-        list.push({ type: "day", weekIndex, dayIndex })
+    // Use IDs instead of indices (as per working main branch logic)
+    state.weeks.forEach((week) => {
+      list.push({ type: "week-header", weekId: week.id })
+      week.days.forEach((day) => {
+        list.push({ type: "day", dayId: day.id, weekId: week.id })
       })
     })
 
@@ -31,11 +33,12 @@ export function PlannerList() {
 
   const virtualizer = useWindowVirtualizer({
     count: items.length,
+    // Use the reliable main branch size estimates
     estimateSize: (index) => {
       const item = items[index]
-      if (item.type === "metrics") return 400
-      if (item.type === "week-header") return 150
-      return 800
+      if (item.type === "metrics") return 800
+      if (item.type === "week-header") return 200
+      return 1200 // Approximate height of a daily log
     },
     overscan: 2,
     scrollMargin: listRef.current?.offsetTop ?? 0,
@@ -67,8 +70,9 @@ export function PlannerList() {
             >
               <div className="pb-8">
                 {item.type === "metrics" && <CoreMetrics />}
-                {item.type === "week-header" && <WeekHeader weekIndex={item.weekIndex} />}
-                {item.type === "day" && <DailyLog weekIndex={item.weekIndex} dayIndex={item.dayIndex} />}
+                {/* Pass IDs for rendering */}
+                {item.type === "week-header" && <WeekHeader weekId={item.weekId} />}
+                {item.type === "day" && <DailyLog dayId={item.dayId} weekId={item.weekId} />}
               </div>
             </div>
           )
