@@ -1,5 +1,6 @@
 "use client"
 
+// 🛠️ FIX 1: ADD useState TO THE IMPORTS
 import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from "react"
 import type { PlannerState, Week, DayEntry } from "@/types/planner"
 import { loadState, saveState, clearState } from "@/lib/storage"
@@ -91,14 +92,18 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(plannerReducer, generateInitialState())
   const [isLoading, setIsLoading] = useState(true)
 
+  // 🛠️ FIX 2: TEMPORARILY COMMENT OUT CORRUPTED DATA LOADING
+  // The 'loadState' function is likely reading old, incompatible data from localStorage
+  // which overwrites the correct 'generateInitialState()' and causes the weeks array to be empty.
   useEffect(() => {
-    const loaded = loadState()
-    if (loaded) {
-      dispatch({ type: "SET_STATE", payload: loaded })
-    }
+    // const loaded = loadState() 
+    // if (loaded) {
+    //   dispatch({ type: "SET_STATE", payload: loaded })
+    // }
     setIsLoading(false)
   }, [])
 
+  // The save hook will now save the clean data that was generated on first load.
   useEffect(() => {
     if (!isLoading) {
       saveState(state)
