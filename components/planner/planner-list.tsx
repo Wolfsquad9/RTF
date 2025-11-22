@@ -8,9 +8,10 @@ import { WeekHeader } from "./week-header"
 import { CoreMetrics } from "./core-metrics"
 
 type ListItem =
+  // 💡 CORRECTED: IDs must be string, matching lib/planner-utils.ts
   | { type: "metrics" }
-  | { type: "week-header"; weekId: number }
-  | { type: "day"; dayId: number; weekId: number }
+  | { type: "week-header"; weekId: string }
+  | { type: "day"; dayId: string; weekId: string }
 
 export function PlannerList() {
   const { state } = usePlanner()
@@ -20,11 +21,12 @@ export function PlannerList() {
   const items = useMemo(() => {
     const list: ListItem[] = [{ type: "metrics" }]
 
-    // Use IDs instead of indices (as per working main branch logic)
     state.weeks.forEach((week) => {
-      list.push({ type: "week-header", weekId: week.id })
+      // NOTE: week.id is a string (e.g., "week-1")
+      list.push({ type: "week-header", weekId: week.id }) 
       week.days.forEach((day) => {
-        list.push({ type: "day", dayId: day.id, weekId: week.id })
+        // NOTE: day.id is a string (e.g., "w1-d1")
+        list.push({ type: "day", dayId: day.id, weekId: week.id }) 
       })
     })
 
@@ -33,12 +35,11 @@ export function PlannerList() {
 
   const virtualizer = useWindowVirtualizer({
     count: items.length,
-    // Use the reliable main branch size estimates
     estimateSize: (index) => {
       const item = items[index]
       if (item.type === "metrics") return 800
       if (item.type === "week-header") return 200
-      return 1200 // Approximate height of a daily log
+      return 1200
     },
     overscan: 2,
     scrollMargin: listRef.current?.offsetTop ?? 0,
@@ -70,7 +71,7 @@ export function PlannerList() {
             >
               <div className="pb-8">
                 {item.type === "metrics" && <CoreMetrics />}
-                {/* Pass IDs for rendering */}
+                {/* Rendering components now receive string IDs */}
                 {item.type === "week-header" && <WeekHeader weekId={item.weekId} />}
                 {item.type === "day" && <DailyLog dayId={item.dayId} weekId={item.weekId} />}
               </div>
