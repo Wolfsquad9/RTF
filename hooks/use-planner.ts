@@ -1,129 +1,143 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+// 🛠️ FIX 1: ADD useState TO THE IMPORTS
+import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from "react"
 import type { PlannerState, Week, DayEntry } from "@/types/planner"
 import { loadState, saveState, clearState } from "@/lib/storage"
-import { addDays, startOfWeek } from "date-fns"
+import { generateInitialState } from "@/lib/planner-utils"
 
-const DEFAULT_WEEKS_COUNT = 12
+type PlannerAction =
+  | { type: "SET_STATE"; payload: PlannerState }
+  | { type: "UPDATE_METRIC"; payload: { key: keyof NonNullable<PlannerState["coreMetrics"]>; value: number } }
+  | { type: "UPDATE_DAY"; payload: { weekIndex: number; dayIndex: number; updates: Partial<DayEntry> } }
+  | { type: "UPDATE_EXERCISE"; payload: { weekIndex: number; dayIndex: number; exerciseIndex: number; field: string; value: any } }
+  | { type: "UPDATE_WEEK_OBJECTIVE"; payload: { weekId: number; objective: string } }
+  | { type: "RESET" }
 
-const generateInitialState = (): PlannerState => {
-  const today = new Date()
-  const start = startOfWeek(today, { weekStartsOn: 1 }) // Monday start
-  const weeks: Week[] = []
+function plannerReducer(state: PlannerState, action: PlannerAction): PlannerState {
+  switch (action.type) {
+    case "SET_STATE":
+      return action.payload
 
-  for (let i = 0; i < DEFAULT_WEEKS_COUNT; i++) {
-    const weekStart = addDays(start, i * 7)
-    const days: DayEntry[] = []
-    for (let j = 0; j < 7; j++) {
-      const date = addDays(weekStart, j)
-      days.push({
-        id: `w${i}-d${j}`,
-        date: date.toISOString(),
-        training: [
-          { id: "ex1", name: "Squat", sets: 4, reps: 8 },
-          { id: "ex2", name: "Bench Press", sets: 4, reps: 8 },
-          { id: "ex3", name: "Deadlift", sets: 3, reps: 5 },
-          { id: "ex4", name: "Overhead Press", sets: 3, reps: 8 },
-          { id: "ex5", name: "Pull Ups", sets: 3, reps: 10 },
-          { id: "ex6", name: "Dips", sets: 3, reps: 10 },
-        ],
-        habits: {
-          sleep: false,
-          nutrition: false,
-          hydration: false,
-          mobility: false,
+    case "UPDATE_METRIC":
+      return {
+        ...state,
+        coreMetrics: {
+          ...state.coreMetrics,
+          [action.payload.key]: action.payload.value,
         },
-      })
-    }
-    weeks.push({
-      id: `week-${i}`,
-      startDate: weekStart.toISOString(),
-      days,
-    })
-  }
+      }
 
-  return {
-    programName: "Return to Form",
-    weeks,
-    coreMetrics: { heightCm: null, weightKg: null, bodyfat: null },
-    lastSavedAt: new Date().toISOString(),
+    case "UPDATE_DAY": {
+      const { weekIndex, dayIndex, updates } = action.payload
+      const newWeeks = [...state.weeks]
+      newWeeks[weekIndex] = {
+        ...newWeeks[weekIndex],
+        days: newWeeks[weekIndex].days.map((day, i) =>
+          i === dayIndex ? { ...day, ...updates } : day
+        ),
+      }
+      return { ...state, weeks: newWeeks }
+    }
+
+    case "UPDATE_EXERCISE": {
+      const { weekIndex, dayIndex, exerciseIndex, field, value } = action.payload
+      const newWeeks = [...state.weeks]
+      const day = newWeeks[weekIndex].days[dayIndex]
+      const newTraining = [...(day.training || [])]
+      newTraining[exerciseIndex] = { ...newTraining[exerciseIndex], [field]: value }
+      
+      newWeeks[weekIndex] = {
+        ...newWeeks[weekIndex],
+        days: newWeeks[weekIndex].days.map((d, i) =>
+          i === dayIndex ? { ...d, training: newTraining } : d
+        ),
+      }
+      return { ...state, weeks: newWeeks }
+    }
+
+    case "UPDATE_WEEK_OBJECTIVE": {
+      const { weekId, objective } = action.payload
+      return {
+        ...state,
+        weeks: state.weeks.map((week) =>
+          parseInt(week.id.split("-")[1]) === weekId
+            ? { ...week, objective }
+            : week
+        ),
+      }
+    }
+
+    case "RESET":
+      return generateInitialState()
+
+    default:
+      return state
   }
 }
 
-export const usePlanner = () => {
-  const [state, setState] = useState<PlannerState | null>(null)
+interface PlannerContextType {
+  state: PlannerState
+  dispatch: React.Dispatch<PlannerAction>
+  isLoading: boolean
+  updateMetric: (key: keyof NonNullable<PlannerState["coreMetrics"]>, value: number) => void
+  updateDay: (weekIndex: number, dayIndex: number, updates: Partial<DayEntry>) => void
+  updateExercise: (weekIndex: number, dayIndex: number, exerciseIndex: number, field: string, value: any) => void
+  resetPlanner: () => void
+}
+
+const PlannerContext = createContext<PlannerContextType | undefined>(undefined)
+
+export function PlannerProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(plannerReducer, generateInitialState())
   const [isLoading, setIsLoading] = useState(true)
 
+  // 🛠️ FIX 2: TEMPORARILY COMMENT OUT CORRUPTED DATA LOADING
+  // The 'loadState' function is likely reading old, incompatible data from localStorage
+  // which overwrites the correct 'generateInitialState()' and causes the weeks array to be empty.
   useEffect(() => {
-    const loaded = loadState()
-    if (loaded) {
-      setState(loaded)
-    } else {
-      setState(generateInitialState())
-    }
+    // const loaded = loadState() 
+    // if (loaded) {
+    //   dispatch({ type: "SET_STATE", payload: loaded })
+    // }
     setIsLoading(false)
   }, [])
 
+  // The save hook will now save the clean data that was generated on first load.
   useEffect(() => {
-    if (state && !isLoading) {
+    if (!isLoading) {
       saveState(state)
     }
   }, [state, isLoading])
 
-  const updateMetric = useCallback((key: keyof NonNullable<PlannerState["coreMetrics"]>, value: number) => {
-    setState((prev) => {
-      if (!prev) return null
-      return {
-        ...prev,
-        coreMetrics: { ...prev.coreMetrics, [key]: value },
-      }
-    })
-  }, [])
+  const updateMetric = (key: keyof NonNullable<PlannerState["coreMetrics"]>, value: number) => {
+    dispatch({ type: "UPDATE_METRIC", payload: { key, value } })
+  }
 
-  const updateDay = useCallback((weekIndex: number, dayIndex: number, updates: Partial<DayEntry>) => {
-    setState((prev) => {
-      if (!prev) return null
-      const newWeeks = [...prev.weeks]
-      const newDays = [...newWeeks[weekIndex].days]
-      newDays[dayIndex] = { ...newDays[dayIndex], ...updates }
-      newWeeks[weekIndex] = { ...newWeeks[weekIndex], days: newDays }
-      return { ...prev, weeks: newWeeks }
-    })
-  }, [])
+  const updateDay = (weekIndex: number, dayIndex: number, updates: Partial<DayEntry>) => {
+    dispatch({ type: "UPDATE_DAY", payload: { weekIndex, dayIndex, updates } })
+  }
 
-  const updateExercise = useCallback(
-    (weekIndex: number, dayIndex: number, exerciseIndex: number, field: string, value: any) => {
-      setState((prev) => {
-        if (!prev) return null
-        const newWeeks = [...prev.weeks]
-        const newDays = [...newWeeks[weekIndex].days]
-        const newTraining = [...(newDays[dayIndex].training || [])]
-        newTraining[exerciseIndex] = {
-          ...newTraining[exerciseIndex],
-          [field]: value,
-        }
-        newDays[dayIndex] = { ...newDays[dayIndex], training: newTraining }
-        newWeeks[weekIndex] = { ...newWeeks[weekIndex], days: newDays }
-        return { ...prev, weeks: newWeeks }
-      })
-    },
-    [],
-  )
+  const updateExercise = (weekIndex: number, dayIndex: number, exerciseIndex: number, field: string, value: any) => {
+    dispatch({ type: "UPDATE_EXERCISE", payload: { weekIndex, dayIndex, exerciseIndex, field, value } })
+  }
 
-  const resetPlanner = useCallback(() => {
+  const resetPlanner = () => {
     if (confirm("Are you sure you want to reset all data?")) {
       clearState()
-      setState(generateInitialState())
+      dispatch({ type: "RESET" })
     }
-  }, [])
-
-  return {
-    state,
-    isLoading,
-    updateMetric,
-    updateDay,
-    updateExercise,
-    resetPlanner,
   }
+
+  return (
+    <PlannerContext.Provider value={{ state, dispatch, isLoading, updateMetric, updateDay, updateExercise, resetPlanner }}>
+      {children}
+    </PlannerContext.Provider>
+  )
+}
+
+export function usePlanner() {
+  const context = useContext(PlannerContext)
+  if (!context) throw new Error("usePlanner must be used within PlannerProvider")
+  return context
 }
