@@ -9,21 +9,20 @@ import { CoreMetrics } from "./core-metrics"
 
 type ListItem =
   | { type: "metrics" }
-  | { type: "week-header"; weekId: number }
-  | { type: "day"; dayId: number; weekId: number }
+  | { type: "week-header"; weekIndex: number }
+  | { type: "day"; weekIndex: number; dayIndex: number }
 
 export function PlannerList() {
   const { state } = usePlanner()
   const listRef = useRef<HTMLDivElement>(null)
 
-  // Flatten the structure for virtualization
   const items = useMemo(() => {
     const list: ListItem[] = [{ type: "metrics" }]
 
-    state.weeks.forEach((week) => {
-      list.push({ type: "week-header", weekId: week.id })
-      week.days.forEach((day) => {
-        list.push({ type: "day", dayId: day.id, weekId: week.id })
+    state.weeks.forEach((week, weekIndex) => {
+      list.push({ type: "week-header", weekIndex })
+      week.days.forEach((day, dayIndex) => {
+        list.push({ type: "day", weekIndex, dayIndex })
       })
     })
 
@@ -34,9 +33,9 @@ export function PlannerList() {
     count: items.length,
     estimateSize: (index) => {
       const item = items[index]
-      if (item.type === "metrics") return 800
-      if (item.type === "week-header") return 200
-      return 1200 // Approximate height of a daily log
+      if (item.type === "metrics") return 400
+      if (item.type === "week-header") return 150
+      return 800
     },
     overscan: 2,
     scrollMargin: listRef.current?.offsetTop ?? 0,
@@ -68,8 +67,8 @@ export function PlannerList() {
             >
               <div className="pb-8">
                 {item.type === "metrics" && <CoreMetrics />}
-                {item.type === "week-header" && <WeekHeader weekId={item.weekId} />}
-                {item.type === "day" && <DailyLog dayId={item.dayId} weekId={item.weekId} />}
+                {item.type === "week-header" && <WeekHeader weekIndex={item.weekIndex} />}
+                {item.type === "day" && <DailyLog weekIndex={item.weekIndex} dayIndex={item.dayIndex} />}
               </div>
             </div>
           )
