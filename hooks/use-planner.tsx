@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useReducer, useEffect, ReactNode } from "react"
+import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from "react"
 import type { PlannerState, Week, DayEntry } from "@/types/planner"
 import { loadState, saveState, clearState } from "@/lib/storage"
 import { generateInitialState } from "@/lib/planner-utils"
