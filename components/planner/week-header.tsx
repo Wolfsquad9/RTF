@@ -6,27 +6,22 @@ import { Label } from "@/components/ui/label"
 import { usePlanner } from "@/hooks/use-planner"
 
 interface WeekHeaderProps {
-  weekId: number
+  weekIndex: number
 }
 
-export function WeekHeader({ weekId }: WeekHeaderProps) {
+export function WeekHeader({ weekIndex }: WeekHeaderProps) {
   const { state, dispatch } = usePlanner()
-  const week = state.weeks.find((w) => w.id === weekId)
+  const week = state.weeks[weekIndex]
 
   if (!week) return null
 
-  const updateObjective = (value: string) => {
-    dispatch({
-      type: "UPDATE_WEEK_OBJECTIVE",
-      payload: { weekId, objective: value },
-    })
-  }
+  const weekNumber = weekIndex + 1
 
   return (
     <div className="py-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight text-primary">WEEK {weekId}</h2>
-        <div className="text-sm text-muted-foreground">{(((weekId - 1) / 12) * 100).toFixed(0)}% COMPLETE</div>
+        <h2 className="text-3xl font-bold tracking-tight text-primary">WEEK {weekNumber}</h2>
+        <div className="text-sm text-muted-foreground">{(((weekNumber - 1) / 12) * 100).toFixed(0)}% COMPLETE</div>
       </div>
 
       <Card className="bg-card/50 border-primary/20">
@@ -35,14 +30,13 @@ export function WeekHeader({ weekId }: WeekHeaderProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <Label htmlFor={`week-${weekId}-objective`} className="sr-only">
+            <Label htmlFor={`week-${weekNumber}-objective`} className="sr-only">
               Objective
             </Label>
             <Input
-              id={`week-${weekId}-objective`}
+              id={`week-${weekNumber}-objective`}
               placeholder="Enter your main focus for this week..."
-              value={week.objective}
-              onChange={(e) => updateObjective(e.target.value)}
+              defaultValue=""
               className="bg-background/50 border-primary/20 focus-visible:ring-primary"
             />
           </div>
